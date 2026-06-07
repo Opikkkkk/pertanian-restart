@@ -1,0 +1,10 @@
+# Mengabaikan dependencies Node.js
+node_modules/
+
+# Mengabaikan foto/bukti upload agar repository tidak membengkak
+uploads/
+!uploads/.gitkeep
+
+# Mengabaikan file log
+npm-debug.log*
+.env

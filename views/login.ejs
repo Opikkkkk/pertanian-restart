@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistem Pertanian Secure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-400 via-green-500 to-emerald-600 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <!-- Card Login -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-lg bg-opacity-95">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-green-600 mb-2">🌾 Sistem Pertanian</h1>
+                <p class="text-gray-600 text-sm">Kelola data hasil panen Anda dengan aman</p>
+            </div>
+
+            <!-- Error Message -->
+            <% if (error) { %>
+                <div class="mb-4 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
+                    <p class="font-semibold">⚠️ Error</p>
+                    <p class="text-sm"><%= error %></p>
+                </div>
+            <% } %>
+            
+            <!-- Form -->
+            <form action="/login" method="POST" class="space-y-4">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                
+                <!-- Username Field -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Username</label>
+                    <input type="text" name="username" required 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition duration-200"
+                        placeholder="Masukkan username Anda">
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <input type="password" name="password" required 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition duration-200"
+                        placeholder="Masukkan password Anda">
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-lg hover:from-green-600 hover:to-emerald-700 transition duration-200 transform hover:scale-105 shadow-lg mt-6">
+                    🔐 Login
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <p class="text-center text-gray-600 text-xs mt-6">
+                Sistem keamanan terjaga dengan CSRF Protection & Helmet Headers
+            </p>
+        </div>
+    </div>
+</body>
+</html>

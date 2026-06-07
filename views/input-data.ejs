@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Data Panen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navbar -->
+    <nav class="bg-gradient-to-r from-green-600 to-emerald-700 text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">🌾 Sistem Pertanian</h1>
+            <a href="/dashboard" class="bg-white text-green-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition">
+                ← Kembali ke Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-2xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">📝 Input Data Panen Baru</h2>
+            <p class="text-gray-600 mb-6">Tambahkan data hasil panen Anda di sini</p>
+
+            <!-- Error Message -->
+            <% if (error) { %>
+                <div class="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-lg">
+                    <p class="font-semibold">⚠️ Error</p>
+                    <p class="text-sm"><%= error %></p>
+                </div>
+            <% } %>
+
+            <!-- Success Message -->
+            <% if (success) { %>
+                <div class="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-lg">
+                    <p class="font-semibold">✅ Berhasil</p>
+                    <p class="text-sm"><%= success %></p>
+                </div>
+            <% } %>
+
+            <!-- Form -->
+            <form action="/input-data?_csrf=<%= csrfToken %>" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                
+                <!-- Komoditas Field -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">🌽 Komoditas</label>
+                    <p class="text-gray-500 text-sm mb-2">Contoh: Padi, Jagung, Cabai, Tomat</p>
+                    <input type="text" name="komoditas" required
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
+                        placeholder="Masukkan jenis komoditas">
+                </div>
+
+                <!-- Jumlah Field -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">⚖️ Jumlah Hasil (Kg)</label>
+                    <input type="number" name="jumlah_kg" required min="1"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
+                        placeholder="Masukkan jumlah dalam kilogram">
+                </div>
+
+                <!-- Foto Field -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">📸 Bukti Foto (Opsional)</label>
+                    <p class="text-gray-500 text-sm mb-3">JPG/PNG, Maksimal 2MB</p>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition cursor-pointer">
+                        <input type="file" name="foto_bukti" accept=".jpg, .jpeg, .png"
+                            class="w-full opacity-0 cursor-pointer"
+                            id="foto_input"
+                            onchange="validateFileSize(this)">
+                        <label for="foto_input" class="cursor-pointer">
+                            <p class="text-gray-600">📁 Klik untuk pilih foto atau drag & drop</p>
+                            <p class="text-gray-400 text-sm mt-1" id="file-name"></p>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-lg hover:from-green-600 hover:to-emerald-700 transition transform hover:scale-105 shadow-lg">
+                        💾 Simpan Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+        function validateFileSize(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.size > MAX_FILE_SIZE) {
+                alert('⚠️ File terlalu besar!\n\nUkuran file: ' + formatFileSize(file.size) + '\nBatas maksimal: 2MB\n\nSilakan pilih file yang lebih kecil.');
+                input.value = ''; // Clear input
+                document.getElementById('file-name').textContent = '';
+                return;
+            }
+
+            // Check file type
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('⚠️ Tipe file tidak didukung!\n\nHanya JPG/PNG yang diperbolehkan.');
+                input.value = ''; // Clear input
+                document.getElementById('file-name').textContent = '';
+                return;
+            }
+
+            document.getElementById('file-name').textContent = '✓ ' + file.name + ' (' + formatFileSize(file.size) + ')';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

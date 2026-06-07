@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Pertanian</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav class="bg-gradient-to-r from-green-600 to-emerald-700 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">🌾 Sistem Pertanian</h1>
+                <p class="text-green-100 text-sm">Kelola hasil panen dengan aman dan terpercaya</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-white bg-opacity-20 px-4 py-2 rounded-lg">
+                    <p class="text-sm">👤 <%= user.username %></p>
+                    <p class="text-xs text-green-100"><%= user.role === 'admin' ? '👨‍💼 Admin' : '👨‍🌾 Petani' %></p>
+                </div>
+                <a href="/logout" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold transition">
+                    🚪 Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">📊 Dashboard Anda</h2>
+            <p class="text-gray-600">Kelola dan pantau semua data hasil panen</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <% if (user.role === 'petani') { %>
+            <div class="mb-8">
+                <a href="/input-data" class="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-8 rounded-lg hover:from-green-600 hover:to-emerald-700 transition transform hover:scale-105 shadow-lg">
+                    ➕ Tambah Data Panen
+                </a>
+            </div>
+        <% } %>
+
+        <!-- Data Table Section -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-green-600 to-emerald-700 text-white p-6">
+                <h3 class="text-2xl font-bold">📈 Data Hasil Panen</h3>
+            </div>
+
+            <% if (dataPanen.length === 0) { %>
+                <div class="p-8 text-center">
+                    <p class="text-gray-500 text-lg">📭 Belum ada data panen yang dicatat</p>
+                </div>
+            <% } else { %>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-100 border-b-2 border-gray-300">
+                            <tr>
+                                <% if (user.role === 'admin') { %>
+                                    <th class="px-6 py-4 text-left font-semibold text-gray-700">👨 Petani</th>
+                                <% } %>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">🌽 Komoditas</th>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">⚖️ Jumlah (Kg)</th>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">📅 Tanggal</th>
+                                <th class="px-6 py-4 text-left font-semibold text-gray-700">📸 Bukti</th>
+                                <% if (user.role === 'admin') { %>
+                                    <th class="px-6 py-4 text-left font-semibold text-gray-700">⚙️ Aksi</th>
+                                <% } %>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% dataPanen.forEach((panen, index) => { %>
+                                <tr class="<%= index % 2 === 0 ? 'bg-white' : 'bg-gray-50' %> border-b hover:bg-green-50 transition">
+                                    <% if (user.role === 'admin') { %>
+                                        <td class="px-6 py-4 text-gray-700 font-medium"><%= panen.username %></td>
+                                    <% } %>
+                                    <td class="px-6 py-4 text-gray-700 font-semibold"><%= panen.komoditas %></td>
+                                    <td class="px-6 py-4 text-gray-700"><%= panen.jumlah_kg %> Kg</td>
+                                    <td class="px-6 py-4 text-gray-600 text-sm"><%= panen.tanggal.toLocaleString('id-ID') %></td>
+                                    <td class="px-6 py-4">
+                                        <% if (panen.foto_bukti) { %>
+                                            <a href="/uploads/<%= panen.foto_bukti %>" target="_blank" class="inline-block">
+                                                <img src="/uploads/<%= panen.foto_bukti %>" alt="Bukti Panen" class="h-12 w-12 object-cover rounded-lg hover:scale-125 transition cursor-pointer shadow-md border-2 border-green-300">
+                                            </a>
+                                        <% } else { %>
+                                            <span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">— Tidak ada</span>
+                                        <% } %>
+                                    </td>
+                                    
+                                    <% if (user.role === 'admin') { %>
+                                        <td class="px-6 py-4 flex gap-2">
+                                            <a href="/edit-data/<%= panen.id %>" class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition transform hover:scale-105">
+                                                ✏️ Edit
+                                            </a>
+                                            
+                                            <form action="/hapus-data/<%= panen.id %>" method="POST" style="display:inline;" onsubmit="return confirm('⚠️ Yakin ingin menghapus data ini? Aksi tidak dapat dibatalkan!')">
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition transform hover:scale-105">
+                                                    🗑️ Hapus
+                                                </button>
+                                            </form>
+                                        </td>
+                                    <% } %>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Summary Statistics (untuk Admin) -->
+        <% if (user.role === 'admin' && dataPanen.length > 0) { %>
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg">
+                    <p class="text-blue-100 text-sm">Total Data</p>
+                    <p class="text-4xl font-bold"><%= dataPanen.length %></p>
+                </div>
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl p-6 shadow-lg">
+                    <p class="text-green-100 text-sm">Total Hasil (Kg)</p>
+                    <p class="text-4xl font-bold"><%= dataPanen.reduce((sum, p) => sum + parseInt(p.jumlah_kg), 0) %></p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl p-6 shadow-lg">
+                    <p class="text-purple-100 text-sm">Dengan Bukti Foto</p>
+                    <p class="text-4xl font-bold"><%= dataPanen.filter(p => p.foto_bukti).length %></p>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>
