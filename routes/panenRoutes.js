@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const db = require('../config/db');
 const { isAuthenticated, authorizeRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const logSecurityEvent = require('../utils/logger');
 
 const router = express.Router();
 
@@ -36,7 +37,11 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
 router.get('/edit-data/:id', isAuthenticated, authorizeRole('admin'), async (req, res) => {
     try {
         const [panen] = await db.execute('SELECT * FROM panen WHERE id = ?', [req.params.id]);
-        if (panen.length === 0) return res.status(404).send('Data tidak ditemukan');
+        if (panen.length === 0) {
+            // CATAT LOG: Indikasi scanning ID / Insecure Direct Object Reference (IDOR)
+            logSecurityEvent('DATA_SCANNING', req.ip, `User ID: ${req.session.userId} mencoba mengakses/mencari data Panen ID ${req.params.id} yang tidak ada.`);
+            return res.status(404).send('Data tidak ditemukan');
+        }
         
         res.render('edit-data', { error: null, data: panen[0] });
     } catch (err) {
@@ -46,16 +51,25 @@ router.get('/edit-data/:id', isAuthenticated, authorizeRole('admin'), async (req
 });
 
 // 2. Proses Update Data (Dengan Proteksi SQL Injection & Upload Opsional)
+// 2. Proses Update Data 
 router.post('/edit-data/:id', isAuthenticated, authorizeRole('admin'), upload.single('foto_bukti'), [
-    body('komoditas').trim().notEmpty().escape(),
+    body('komoditas')
+        .trim()
+        .matches(/^[a-zA-Z0-9\s]+$/).withMessage('Ditolak: Komoditas hanya boleh berisi huruf dan angka. Simbol dilarang!')
+        .escape(),
     body('jumlah_kg').isInt({ min: 1 }).withMessage('Jumlah harus berupa angka positif')
 ], async (req, res) => {
     const errors = validationResult(req);
     const idData = req.params.id;
 
     if (!errors.isEmpty()) {
-        // Ambil data lama jika validasi gagal agar form tidak kosong
+        // CATAT LOG: Indikasi serangan saat update data
+        logSecurityEvent('MALICIOUS_INPUT', req.ip, `User ID: ${req.session.userId} memasukkan karakter ilegal saat Edit Data ID ${idData}. Target: ${req.body.komoditas}`);
+        
+        // Ambil data lama jika validasi gagal
         const [panen] = await db.execute('SELECT * FROM panen WHERE id = ?', [idData]);
+        
+        // PENTING: Harus ada kata 'return'
         return res.render('edit-data', { error: errors.array()[0].msg, data: panen[0] });
     }
 
@@ -63,13 +77,11 @@ router.post('/edit-data/:id', isAuthenticated, authorizeRole('admin'), upload.si
 
     try {
         if (req.file) {
-            // Jika admin mengunggah foto baru
             await db.execute(
                 'UPDATE panen SET komoditas = ?, jumlah_kg = ?, foto_bukti = ? WHERE id = ?',
                 [komoditas, jumlah_kg, req.file.filename, idData]
             );
         } else {
-            // Jika foto tidak diubah
             await db.execute(
                 'UPDATE panen SET komoditas = ?, jumlah_kg = ? WHERE id = ?',
                 [komoditas, jumlah_kg, idData]
@@ -101,24 +113,29 @@ router.get('/input-data', isAuthenticated, authorizeRole('petani'), (req, res) =
 
 // Proses Input Data Panen (Secure File Upload Opsional & Input Validation)
 router.post('/input-data', isAuthenticated, authorizeRole('petani'), upload.single('foto_bukti'), [
-    body('komoditas').trim().notEmpty().escape(),
+    // VALIDASI KETAT: Hanya boleh huruf, angka, dan spasi.
+    body('komoditas')
+        .trim()
+        .matches(/^[a-zA-Z0-9\s]+$/).withMessage('Ditolak: Komoditas hanya boleh berisi huruf dan angka. Simbol dilarang!')
+        .escape(),
     body('jumlah_kg').isInt({ min: 1 }).withMessage('Jumlah harus berupa angka positif')
 ], async (req, res) => {
-    // Handle multer errors (file too large, invalid file type, etc)
+    
+    // Handle multer errors
     if (req.file === undefined && req.body.error) {
         return res.render('input-data', { error: req.body.error, success: null });
     }
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        // CATAT LOG: Indikasi serangan XSS/SQLi
+        logSecurityEvent('MALICIOUS_INPUT', req.ip, `User ID: ${req.session.userId} memasukkan karakter ilegal di form Panen. Target: Komoditas=${req.body.komoditas}`);
+        
+        // PENTING: Harus ada kata 'return' agar proses BERHENTI dan tidak lanjut ke database
         return res.render('input-data', { error: errors.array()[0].msg, success: null });
     }
 
-    // KITA HAPUS PENGECEKAN WAJIB FILE DI SINI
-
     const { komoditas, jumlah_kg } = req.body;
-    
-    // Jika ada file yang diupload, ambil namanya. Jika tidak ada, isi dengan null
     const fotoPath = req.file ? req.file.filename : null;
 
     try {

@@ -4,6 +4,7 @@ const session = require('express-session');
 const helmet = require('helmet');
 const csrf = require('csurf');
 const path = require('path');
+const logSecurityEvent = require('./utils/logger');
 
 const app = express();
 const PORT = 3000;
@@ -20,14 +21,19 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "https://cdn.tailwindcss.com"],
+            scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"], // <--- TAMBAHKAN BARIS INI
             styleSrc: ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "https:"],
+            imgSrc: ["'self'", "data:", "http:", "https:"],
             fontSrc: ["'self'", "https:"],
             connectSrc: ["'self'"],
-            frameSrc: ["'self'"]
+            frameSrc: ["'self'"],
+            formAction: ["'self'"],
+            upgradeInsecureRequests: null,
         }
-    }
+    },
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false
 }));
 
 // 2. Body Parser untuk form input
@@ -85,19 +91,14 @@ app.use('/', panenRoutes);
 // Error handler untuk Multer (File Upload Errors)
 app.use(function (err, req, res, next) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-        // File too large
+        logSecurityEvent('UPLOAD_VIOLATION', req.ip, `Mencoba upload file terlalu besar (Melebihi 2MB). UserID: ${req.session.userId || 'Guest'}`);
         return res.render('input-data', { 
             error: '⚠️ File terlalu besar! Maksimal ukuran file adalah 2MB. Silakan pilih file yang lebih kecil.',
             success: null 
         });
     }
-    if (err.code === 'LIMIT_PART_COUNT') {
-        return res.render('input-data', { 
-            error: '⚠️ Terlalu banyak file yang di-upload',
-            success: null 
-        });
-    }
     if (err.message && err.message.includes('Hanya diperbolehkan mengunggah file gambar')) {
+        logSecurityEvent('UPLOAD_MALICIOUS', req.ip, `Mencoba upload file non-gambar (Indikasi Web Shell). Target file: ${err.message}`);
         return res.render('input-data', { 
             error: '⚠️ ' + err.message,
             success: null 
@@ -109,6 +110,10 @@ app.use(function (err, req, res, next) {
 // Menangkap error CSRF Token (jika Red Team mencoba memanipulasi form)
 app.use(function (err, req, res, next) {
     if (err.code !== 'EBADCSRFTOKEN') return next(err);
+    
+    // CATAT LOG: Terjadi serangan CSRF
+    logSecurityEvent('CSRF_ATTACK', req.ip, `Token CSRF tidak valid saat mencoba POST data. Indikasi manipulasi form.`);
+    
     res.status(403).send('Terdeteksi pelanggaran keamanan: CSRF Token tidak valid.');
 });
 

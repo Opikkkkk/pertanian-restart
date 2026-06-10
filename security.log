@@ -1,0 +1,18 @@
+[11/6/2026, 04.25.33] [BRUTE_FORCE_WARNING] IP: ::ffff:192.168.0.104 - Mencoba login lebih dari 5 kali. Target username: petani
+[11/6/2026, 04.25.33] [SUCCESS_LOGIN] IP: ::ffff:192.168.0.104 - Berhasil masuk sebagai: petani
+[11/6/2026, 04.27.11] [BRUTE_FORCE_WARNING] IP: ::ffff:192.168.0.104 - Mencoba login lebih dari 5 kali. Target username: admin
+[11/6/2026, 04.27.11] [SUCCESS_LOGIN] IP: ::ffff:192.168.0.104 - Berhasil masuk sebagai: admin
+[11/6/2026, 04.30.03] [RBAC_VIOLATION] IP: ::ffff:192.168.0.104 - User ID: 2 (Role: admin) mencoba memaksa masuk ke rute khusus petani: /input-data
+[11/6/2026, 04.31.41] [INVALID_INPUT] IP: ::ffff:192.168.0.104 - Input login mengandung karakter ilegal. Username: &lt;script&gt;alert(1)&lt;&#x2F;script&gt;
+[11/6/2026, 04.32.22] [UNAUTHORIZED_ACCESS] IP: ::ffff:192.168.0.104 - Mencoba mengakses rute terlindungi tanpa login: /dashboard
+[11/6/2026, 04.32.54] [CSRF_ATTACK] IP: ::1 - Token CSRF tidak valid saat mencoba POST data. Indikasi manipulasi form.
+[11/6/2026, 04.33.04] [CSRF_ATTACK] IP: ::1 - Token CSRF tidak valid saat mencoba POST data. Indikasi manipulasi form.
+[11/6/2026, 04.33.13] [SUCCESS_LOGIN] IP: ::ffff:192.168.0.104 - Berhasil masuk sebagai: petani
+[11/6/2026, 04.35.40] [SUCCESS_LOGIN] IP: ::ffff:192.168.0.104 - Berhasil masuk sebagai: admin
+[11/6/2026, 04.37.27] [DATA_SCANNING] IP: ::ffff:192.168.0.104 - User ID: 2 mencoba mengakses/mencari data Panen ID 999999 yang tidak ada.
+[11/6/2026, 04.39.10] [SUCCESS_LOGIN] IP: ::1 - Berhasil masuk sebagai: petani
+[11/6/2026, 04.40.36] [CSRF_ATTACK] IP: ::ffff:192.168.0.104 - Token CSRF tidak valid saat mencoba POST data. Indikasi manipulasi form.
+[11/6/2026, 04.40.40] [CSRF_ATTACK] IP: ::ffff:192.168.0.104 - Token CSRF tidak valid saat mencoba POST data. Indikasi manipulasi form.
+[11/6/2026, 04.40.52] [SUCCESS_LOGIN] IP: ::ffff:192.168.0.104 - Berhasil masuk sebagai: admin
+[11/6/2026, 04.41.07] [FAILED_LOGIN] IP: ::ffff:192.168.0.104 - Password salah untuk target: petani
+[11/6/2026, 04.41.12] [SUCCESS_LOGIN] IP: ::ffff:192.168.0.104 - Berhasil masuk sebagai: petani
